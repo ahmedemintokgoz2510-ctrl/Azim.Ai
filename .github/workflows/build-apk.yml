@@ -16,16 +16,26 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      # Gradle komutlarının çalışabilmesi için gerekli çalıştırma iznini veriyoruz
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant execute permission for gradlew (if present)
+        run: |
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+          else
+            echo "gradlew not found in repo root — will use system gradle provided by setup-gradle"
+          fi
 
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
 
       - name: APK derle
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          if [ -f ./gradlew ]; then
+            ./gradlew assembleDebug --no-daemon
+          else
+            echo "Running using installed gradle (no wrapper)"
+            gradle assembleDebug --no-daemon
+          fi
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
